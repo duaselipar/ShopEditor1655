@@ -8,4 +8,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="MySql.Data">
+      <HintPath>..\..\..\..\OneDrive\Desktop\New Engine mysql.data\MySql.Data.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

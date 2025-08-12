@@ -1,21 +1,33 @@
-﻿using System;
+﻿using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using MySql.Data.MySqlClient;
 
 namespace NewShopEditor
 {
     public partial class ShopEditor : Form
     {
+        // ========== SHOP.DAT ==========
         private List<ShopInfo> allShops = new List<ShopInfo>();
         private string shopDatPath = "";
 
+        // ========== NewShop.dat ==========
         private List<string> newShopRawLines = new List<string>();
         private string newShopDatPath = "";
-
         private Dictionary<string, Dictionary<string, string>> newShopItems = new Dictionary<string, Dictionary<string, string>>();
+
+        // ========== NewShopMx.dat (NEW) ==========
+        private List<string> newShopMxRawLines = new List<string>();
+        private string newShopMxDatPath = "";
+        private Dictionary<string, Dictionary<string, string>> newShopMxItems = new Dictionary<string, Dictionary<string, string>>();
+        private Dictionary<string, Dictionary<string, string>> newShopMxCategories = new();
+        private readonly HashSet<string> hiddenMxShops = new() { "9995", "28", "26" };
+        private MySqlConnection? conn = null;
+
 
         public ShopEditor()
         {
@@ -23,11 +35,13 @@ namespace NewShopEditor
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             btnFindPath.Click += BtnFindPath_Click;
-            btnLoad.Click += BtnLoad_Click;
             btnSave.Click += BtnSave_Click;
             dgvShops.SelectionChanged += DgvShops_SelectionChanged;
             tabControl.Selected += TabControl_Selected;
-            tvCategories.AfterSelect += tvCategories_AfterSelect;
+            btnConnect.Click += BtnConnect_Click;
+
+            // NEW: hook for NewShopMx tab TreeView
+            tvMxCategories.AfterSelect += tvMxCategories_AfterSelect;
         }
 
         private void BtnFindPath_Click(object sender, EventArgs e)
@@ -41,37 +55,15 @@ namespace NewShopEditor
                     if (File.Exists(possiblePath))
                     {
                         shopDatPath = possiblePath;
-                        btnLoad.Enabled = true;
                         btnSave.Enabled = true;
                     }
                     else
                     {
                         shopDatPath = "";
-                        btnLoad.Enabled = false;
                         btnSave.Enabled = false;
                         MessageBox.Show("shop.dat tak jumpa dalam subfolder \\ini !", "Ralat");
                     }
                 }
-            }
-        }
-
-        private void BtnLoad_Click(object sender, EventArgs e)
-        {
-            if (string.IsNullOrEmpty(shopDatPath) || !File.Exists(shopDatPath))
-            {
-                MessageBox.Show("Path shop.dat tak sah!", "Ralat");
-                return;
-            }
-            allShops = ShopDatHandler.Read(shopDatPath);
-            LoadShopsToGrid();
-
-            if (ShopDatHandler.hiddenShopIDs.Count > 0)
-            {
-                MessageBox.Show(
-                    "Shop berikut di-hide (untouched):\n" +
-                    string.Join(", ", ShopDatHandler.hiddenShopIDs),
-                    "Maklumat ShopID Hidden"
-                );
             }
         }
 
@@ -90,12 +82,24 @@ namespace NewShopEditor
 
             for (int i = 0; i < filteredShops.Count; i++)
             {
-                dt.Rows.Add(i + 1, filteredShops[i].ShopID, filteredShops[i].Name, filteredShops[i].Type, filteredShops[i].ItemIDs.Count);
+                dt.Rows.Add(i + 1, filteredShops[i].ShopID, filteredShops[i].Name, filteredShops[i].Type, (uint)filteredShops[i].ItemIDs.Count);
             }
             dgvShops.DataSource = dt;
             if (dt.Rows.Count > 0)
                 dgvShops.Rows[0].Selected = true;
         }
+
+        private static readonly Dictionary<int, string> MxCatalogMap = new()
+{
+    { 0, "Other" },
+    { 1, "Eudemon" },
+    { 2, "Equipment" },
+    { 3, "Item" },
+    { 4, "Casual" },
+    { 5, "Collection" },
+    { 6, "Unknown" }
+};
+
 
         private void DgvShops_SelectionChanged(object sender, EventArgs e)
         {
@@ -129,15 +133,38 @@ namespace NewShopEditor
 
         private void BtnSave_Click(object sender, EventArgs e)
         {
+            if (conn == null || conn.State != System.Data.ConnectionState.Open)
+            {
+                MessageBox.Show("Sila sambung ke MySQL dahulu sebelum menyimpan!", "Sambungan Diperlukan");
+                return;
+            }
+
             if (string.IsNullOrEmpty(shopDatPath) || allShops == null || allShops.Count == 0)
             {
                 MessageBox.Show("Tiada data untuk disimpan!");
                 return;
             }
+
             try
             {
+                // Simpan Shop.dat
                 ShopDatHandler.Save(shopDatPath, allShops);
-                MessageBox.Show("Shop.dat berjaya disimpan!");
+
+                // Simpan newshop.dat
+                if (!string.IsNullOrEmpty(newShopDatPath) && newShopRawLines.Count > 0)
+                {
+                    NewShopDatHandler.Write(newShopDatPath, newShopRawLines);
+                    // NOTA: Jangan delete .ini
+                }
+
+                // Simpan newshopmx.dat
+                if (!string.IsNullOrEmpty(newShopMxDatPath) && newShopMxCategories.Count > 0)
+                {
+                    NewShopMxDatHandler.Write(newShopMxDatPath, newShopMxCategories);
+                    // NOTA: Jangan delete .ini
+                }
+
+                MessageBox.Show("Semua data berjaya disimpan!");
             }
             catch (Exception ex)
             {
@@ -145,101 +172,114 @@ namespace NewShopEditor
             }
         }
 
+
+
+
         private void TabControl_Selected(object sender, TabControlEventArgs e)
         {
-            if (e.TabPage == tabNewShop && string.IsNullOrEmpty(newShopDatPath))
+            // hanya handle tabNewShopMx sahaja sekarang
+            if (e.TabPage == tabNewShopMx && newShopMxCategories.Count == 0)
             {
-                var possibleNewShopPath = Path.Combine(txtClientPath.Text, "ini", "newshop.dat");
-                if (File.Exists(possibleNewShopPath))
+                var iniPath = Path.Combine(txtClientPath.Text, "ini", "newshopmx.ini");
+                var datPath = Path.Combine(txtClientPath.Text, "ini", "newshopmx.dat");
+
+                if (!File.Exists(iniPath))
                 {
-                    newShopDatPath = possibleNewShopPath;
-                    newShopRawLines = NewShopDatHandler.Read(newShopDatPath);
-                    ParseNewShopItems();
-                    LoadCategoriesToTreeView();
-                    SaveNewShopIni(Path.Combine(txtClientPath.Text, "ini", "newshop.ini"));
+                    if (File.Exists(datPath))
+                    {
+                        newShopMxRawLines = NewShopMxDatHandler.Read(datPath);
+                        SaveNewShopMxIni(iniPath);
+                    }
+                    else
+                    {
+                        MessageBox.Show("newshopmx.ini & newshopmx.dat tak dijumpai!", "Ralat");
+                        return;
+                    }
                 }
                 else
                 {
-                    MessageBox.Show("newshop.dat tak dijumpai dalam folder \\ini!", "Ralat");
+                    newShopMxRawLines = new List<string>(File.ReadAllLines(iniPath));
                 }
+
+                newShopMxCategories = ParseIniFile(iniPath);
+                LoadMxIniCategoriesToTreeView();
             }
         }
 
-        private void LoadCategoriesToTreeView()
+
+
+        private void LoadMxIniCategoriesToTreeView()
         {
-            tvCategories.Nodes.Clear();
+            tvMxCategories.Nodes.Clear();
+            var catalogNodes = new Dictionary<int, TreeNode>();
 
-            foreach (var section in newShopItems.Keys)
+            foreach (var entry in newShopMxCategories)
             {
-                if (section.StartsWith("ItemSort"))
+                if (!int.TryParse(entry.Key, out _)) continue;
+                if (hiddenMxShops.Contains(entry.Key)) continue;
+
+                var data = entry.Value;
+
+                int catalog = data.TryGetValue("Catalog", out var catStr) && int.TryParse(catStr, out var c) ? c : -1;
+                string catalogName = MxCatalogMap.TryGetValue(catalog, out var mappedName) ? mappedName : $"Catalog {catalog}";
+
+                if (!catalogNodes.TryGetValue(catalog, out var parent))
                 {
-                    tvCategories.Nodes.Add(section);
+                    parent = tvMxCategories.Nodes.Add($"cat_{catalog}", catalogName);
+                    catalogNodes[catalog] = parent;
                 }
+
+                string label = data.TryGetValue("Name", out var name) ? name : $"[{entry.Key}]";
+                if (data.TryGetValue("Amount", out var amtStr) && !string.IsNullOrEmpty(amtStr))
+                {
+                    label += $" ({amtStr})";
+                }
+
+                parent.Nodes.Add(entry.Key, label);
             }
 
-            if (tvCategories.Nodes.Count > 0)
-                tvCategories.Nodes[0].EnsureVisible();
+            tvMxCategories.ExpandAll();
         }
 
-        private void tvCategories_AfterSelect(object sender, TreeViewEventArgs e)
+
+
+
+        private Dictionary<string, Dictionary<string, string>> ParseIniFile(string path)
         {
-            if (e.Node == null) return;
-            string selectedCategory = e.Node.Text;
+            var result = new Dictionary<string, Dictionary<string, string>>();
+            string? currentSection = null;
+            Dictionary<string, string>? current = null;
 
-            var items = new List<string>();
-
-            if (newShopItems.TryGetValue(selectedCategory, out var sortData))
+            foreach (var raw in File.ReadAllLines(path))
             {
-                foreach (var entry in sortData)
+                var line = raw.Trim();
+                if (string.IsNullOrEmpty(line) || line.StartsWith(";")) continue;
+
+                if (line.StartsWith("[") && line.EndsWith("]"))
                 {
-                    if (entry.Key.StartsWith("ItemID"))
-                        items.Add(entry.Value.Trim());
+                    if (currentSection != null && current != null)
+                        result[currentSection] = current;
+
+                    currentSection = line[1..^1];
+                    current = new Dictionary<string, string>();
+                }
+                else if (current != null && line.Contains('='))
+                {
+                    var parts = line.Split('=', 2);
+                    current[parts[0].Trim()] = parts[1].Trim();
                 }
             }
 
-            var dt = new DataTable();
-            dt.Columns.Add("No", typeof(int));
-            dt.Columns.Add("ItemID", typeof(string));
-            dt.Columns.Add("ItemType", typeof(string));
-            dt.Columns.Add("CostType", typeof(string));
-            dt.Columns.Add("Version", typeof(string));
-            dt.Columns.Add("New", typeof(string));
-            dt.Columns.Add("Commend", typeof(string));
-            dt.Columns.Add("OEM", typeof(string));
-            dt.Columns.Add("Describe", typeof(string));
-            dt.Columns.Add("ReturnEmoney", typeof(string));
-            dt.Columns.Add("BeginTime", typeof(string));
-            dt.Columns.Add("EndTime", typeof(string));
-            dt.Columns.Add("Tip", typeof(string));
+            if (currentSection != null && current != null)
+                result[currentSection] = current;
 
-            for (int i = 0; i < items.Count; i++)
-            {
-                string key = "Item" + items[i];
-                if (newShopItems.TryGetValue(key, out var data))
-                {
-                    dt.Rows.Add(i + 1,
-                        items[i],
-                        data.TryGetValue("ItemType", out var itemType) ? itemType : "",
-                        data.TryGetValue("CostType", out var costType) ? costType : "",
-                        data.TryGetValue("Version", out var version) ? version : "",
-                        data.TryGetValue("New", out var isNew) ? isNew : "",
-                        data.TryGetValue("Commend", out var commend) ? commend : "",
-                        data.TryGetValue("OEM", out var oem) ? oem : "",
-                        data.TryGetValue("Describe", out var desc) ? desc : "",
-                        data.TryGetValue("ReturnEmoney", out var remoney) ? remoney : "",
-                        data.TryGetValue("BeginTime", out var beginTime) ? beginTime : "",
-                        data.TryGetValue("EndTime", out var endTime) ? endTime : "",
-                        data.TryGetValue("Tip", out var tip) ? tip : ""
-                    );
-                }
-                else
-                {
-                    dt.Rows.Add(i + 1, items[i], "(Data not found)");
-                }
-            }
-
-            dgvNewShopItems.DataSource = dt;
+            return result;
         }
+
+        // ==================== NewShop.dat helpers (ASAL) ====================
+
+
+
 
         private void ParseNewShopItems()
         {
@@ -280,12 +320,225 @@ namespace NewShopEditor
             try
             {
                 File.WriteAllLines(savePath, newShopRawLines, Encoding.UTF8);
-                MessageBox.Show("NewShop.ini berjaya disimpan ke:\n" + savePath);
+                //MessageBox.Show("NewShop.ini berjaya disimpan ke:\n" + savePath);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Gagal simpan NewShop.ini: " + ex.Message);
             }
         }
+
+
+        // ==================== NewShopMx.dat helpers (NEW) ====================
+
+
+        private void tvMxCategories_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            if (e.Node == null || e.Node.Parent == null) return; // abaikan parent
+
+            string sectionKey = e.Node.Name;
+            if (!newShopMxCategories.TryGetValue(sectionKey, out var category)) return;
+
+            var itemIds = new List<string>();
+
+            // Abaikan ItemSource — terus je scan semua ItemIDx
+            foreach (var kv in category)
+            {
+                if (kv.Key.StartsWith("ItemID"))
+                {
+                    itemIds.Add(kv.Value.Trim());
+                }
+            }
+
+            dgvNewShopMxItems.DataSource = CreateItemGrid(itemIds);
+        }
+
+
+
+        private DataTable CreateItemGrid(List<string> itemIds)
+        {
+            var dt = new DataTable();
+            dt.Columns.Add("No", typeof(int));
+            dt.Columns.Add("ItemID", typeof(string));
+            dt.Columns.Add("ItemType", typeof(string));
+            dt.Columns.Add("CostType", typeof(string));
+            dt.Columns.Add("Version", typeof(string));
+            dt.Columns.Add("New", typeof(string));
+            dt.Columns.Add("Commend", typeof(string));
+            dt.Columns.Add("OEM", typeof(string));
+            dt.Columns.Add("Describe", typeof(string));
+            dt.Columns.Add("ReturnEmoney", typeof(string));
+            dt.Columns.Add("BeginTime", typeof(string));
+            dt.Columns.Add("EndTime", typeof(string));
+            dt.Columns.Add("Tip", typeof(string));
+
+            for (int i = 0; i < itemIds.Count; i++)
+            {
+                string key = "Item" + itemIds[i];
+                if (newShopItems.TryGetValue(key, out var data))
+                {
+                    dt.Rows.Add(i + 1,
+                        itemIds[i],
+                        data.TryGetValue("ItemType", out var itemType) ? itemType : "",
+                        data.TryGetValue("CostType", out var costType) ? costType : "",
+                        data.TryGetValue("Version", out var version) ? version : "",
+                        data.TryGetValue("New", out var isNew) ? isNew : "",
+                        data.TryGetValue("Commend", out var commend) ? commend : "",
+                        data.TryGetValue("OEM", out var oem) ? oem : "",
+                        data.TryGetValue("Describe", out var desc) ? desc : "",
+                        data.TryGetValue("ReturnEmoney", out var remoney) ? remoney : "",
+                        data.TryGetValue("BeginTime", out var beginTime) ? beginTime : "",
+                        data.TryGetValue("EndTime", out var endTime) ? endTime : "",
+                        data.TryGetValue("Tip", out var tip) ? tip : ""
+                    );
+                }
+            }
+
+            return dt;
+        }
+
+        private void SaveNewShopMxIni(string savePath)
+        {
+            try
+            {
+                File.WriteAllLines(savePath, newShopMxRawLines, Encoding.UTF8);
+                //MessageBox.Show("NewShopMx.ini berjaya disimpan ke:\n" + savePath);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Gagal simpan NewShopMx.ini: " + ex.Message);
+            }
+        }
+
+        private void BtnConnect_Click(object? sender, EventArgs e)
+        {
+            if (conn != null && conn.State == System.Data.ConnectionState.Open)
+            {
+                // Disconnect
+                try
+                {
+                    conn.Close();
+                    conn.Dispose();
+                    conn = null;
+                    btnConnect.Text = "Connect";
+                    MessageBox.Show("Disconnected dari MySQL.");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Gagal disconnect: " + ex.Message);
+                }
+                return;
+            }
+
+            // Check path
+            string clientPath = txtClientPath.Text.Trim();
+            if (string.IsNullOrEmpty(clientPath) || !Directory.Exists(clientPath))
+            {
+                MessageBox.Show("Sila pilih folder client terlebih dahulu.");
+                return;
+            }
+
+            string shopPath = Path.Combine(clientPath, "ini", "shop.dat");
+            string newshopPath = Path.Combine(clientPath, "ini", "newshop.dat");
+
+            if (!File.Exists(shopPath) || !File.Exists(newshopPath))
+            {
+                MessageBox.Show("shop.dat atau newshop.dat tidak dijumpai dalam folder \\ini!");
+                return;
+            }
+
+            // Connection details
+            string host = txtHost.Text.Trim();
+            string port = txtPort.Text.Trim();
+            string user = txtUser.Text.Trim();
+            string pass = txtPass.Text.Trim();
+            string db = txtDb.Text.Trim();
+
+            if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(port) ||
+                string.IsNullOrEmpty(user) || string.IsNullOrEmpty(db))
+            {
+                MessageBox.Show("Sila isi semua maklumat sambungan MySQL.");
+                return;
+            }
+
+            string connStr = $"server={host};port={port};uid={user};pwd={pass};database={db};";
+
+            try
+            {
+                conn = new MySqlConnection(connStr);
+                conn.Open();
+
+                if (conn.State == System.Data.ConnectionState.Open)
+                {
+                    btnConnect.Text = "Disconnect";
+
+                    // Load semua data
+                    LoadAllFiles();
+                }
+            }
+            catch (Exception ex)
+            {
+                conn = null;
+                MessageBox.Show("Gagal sambung ke MySQL:\n" + ex.Message);
+            }
+        }
+
+
+        private void LoadAllFiles()
+        {
+            if (string.IsNullOrEmpty(shopDatPath) || !File.Exists(shopDatPath))
+            {
+                MessageBox.Show("Path shop.dat tak sah!", "Ralat");
+                return;
+            }
+
+            // ========== SHOP.DAT ==========
+            allShops = ShopDatHandler.Read(shopDatPath);
+            LoadShopsToGrid();
+
+            if (ShopDatHandler.hiddenShopIDs.Count > 0)
+            {
+                MessageBox.Show(
+                    "Shop berikut di-hide (untouched):\n" +
+                    string.Join(", ", ShopDatHandler.hiddenShopIDs),
+                    "Maklumat ShopID Hidden"
+                );
+            }
+
+            // ========== NEWSHOP.DAT ==========
+            var newshopPath = Path.Combine(txtClientPath.Text, "ini", "newshop.dat");
+            if (File.Exists(newshopPath))
+            {
+                newShopDatPath = newshopPath;
+                newShopRawLines = NewShopDatHandler.Read(newShopDatPath);
+                ParseNewShopItems(); // masih perlu untuk item lookup
+                SaveNewShopIni(Path.Combine(txtClientPath.Text, "ini", "newshop.ini"));
+            }
+
+            // ========== NEWSHOPMX.DAT ==========
+            newShopMxDatPath = Path.Combine(txtClientPath.Text, "ini", "newshopmx.dat");
+            var mxIniPath = Path.Combine(txtClientPath.Text, "ini", "newshopmx.ini");
+
+            if (!File.Exists(mxIniPath))
+            {
+                if (File.Exists(newShopMxDatPath))
+                {
+                    newShopMxRawLines = NewShopMxDatHandler.Read(newShopMxDatPath);
+                    SaveNewShopMxIni(mxIniPath);
+                }
+            }
+            else
+            {
+                newShopMxRawLines = new List<string>(File.ReadAllLines(mxIniPath));
+            }
+
+            if (File.Exists(mxIniPath))
+            {
+                newShopMxCategories = ParseIniFile(mxIniPath);
+                LoadMxIniCategoriesToTreeView();
+            }
+        }
+
+
     }
 }

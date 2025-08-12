@@ -51,5 +51,27 @@ namespace NewShopEditor
                 }
             }
         }
+
+        /// <summary>
+        /// Simpan dari data yang telah diparse ke bentuk struktur section-key-value → newshop.dat
+        /// </summary>
+        public static void Write(string path, Dictionary<string, Dictionary<string, string>> data)
+        {
+            var lines = new List<string>();
+
+            foreach (var section in data)
+            {
+                if (string.IsNullOrWhiteSpace(section.Key)) continue;
+                lines.Add("[" + section.Key + "]");
+                foreach (var kv in section.Value)
+                {
+                    if (!string.IsNullOrWhiteSpace(kv.Key))
+                        lines.Add($"{kv.Key}={kv.Value}");
+                }
+                lines.Add(""); // kosong antara section
+            }
+
+            Write(path, lines);
+        }
     }
 }
