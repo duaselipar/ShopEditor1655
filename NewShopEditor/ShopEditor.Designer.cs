@@ -675,7 +675,7 @@ namespace NewShopEditor
             MaximizeBox = false;
             Name = "ShopEditor";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "EO Shop/NewShop Editor";
+            Text = "EO Shop 1655 Editor - DuaSelipar";
             tabControl.ResumeLayout(false);
             tabShop.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dgvShops).EndInit();
