@@ -902,7 +902,6 @@ namespace NewShopEditor
         private bool IsConnected() => conn != null && conn.State == ConnectionState.Open;
 
         // Enable/disable tabs & kandungan ikut status connection
-        // Enable/disable tabs & kandungan ikut status connection
         private void UpdateConnectUi()
         {
             bool on = IsConnected();
@@ -921,9 +920,16 @@ namespace NewShopEditor
             dgvWBToy.Enabled = on;
 
             // Servant Craft
-            tabServant.Enabled = on;          // <-- tambah ni (nama tab servant kau)
+            tabServant.Enabled = on;
             dgvGift.Enabled = on;
             dgvSpirit.Enabled = on;
+
+            // Event Shop  <-- tambah
+            tabEventShop.Enabled = on;
+            dgvAstraShop.Enabled = on;
+            dgvHonorShop.Enabled = on;
+            dgvPlaneShop.Enabled = on;
+            btnNewEventItem.Enabled = on;
 
             // Shop control
             dgvShops.Enabled = on;
@@ -940,16 +946,22 @@ namespace NewShopEditor
         }
 
 
+
         // Block user tukar tab ke Shop/NewShopMx jika tak connected
+        // 1) Handler – tambah tabEventShop
         private void TabControl_Selecting_BlockWhenDisconnected(object? sender, TabControlCancelEventArgs e)
         {
             if (!IsConnected() &&
-               (e.TabPage == tabShop || e.TabPage == tabNewShopMx ||
-                e.TabPage == tabPage1 || e.TabPage == tabServant))   // <-- tambah wardobe & servant
+               (e.TabPage == tabShop
+                || e.TabPage == tabNewShopMx
+                || e.TabPage == tabPage1        // Wardrobe
+                || e.TabPage == tabServant      // Servant
+                || e.TabPage == tabEventShop))  // <-- TAMBAH NI
             {
                 e.Cancel = true;
             }
         }
+
 
 
         // Make columns fill DataGrid width (Shop items)
