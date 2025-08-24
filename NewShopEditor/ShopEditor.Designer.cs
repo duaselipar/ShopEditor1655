@@ -94,6 +94,15 @@ namespace NewShopEditor
             dgvGift = new DataGridView();
             tabSpirit = new TabPage();
             dgvSpirit = new DataGridView();
+            tabEventShop = new TabPage();
+            btnNewEventItem = new Button();
+            tabControl2 = new TabControl();
+            tabAstraShop = new TabPage();
+            dgvAstraShop = new DataGridView();
+            tabHonorShop = new TabPage();
+            dgvHonorShop = new DataGridView();
+            tabPlaneShop = new TabPage();
+            dgvPlaneShop = new DataGridView();
             label1 = new Label();
             label2 = new Label();
             label3 = new Label();
@@ -130,6 +139,14 @@ namespace NewShopEditor
             ((System.ComponentModel.ISupportInitialize)dgvGift).BeginInit();
             tabSpirit.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvSpirit).BeginInit();
+            tabEventShop.SuspendLayout();
+            tabControl2.SuspendLayout();
+            tabAstraShop.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvAstraShop).BeginInit();
+            tabHonorShop.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvHonorShop).BeginInit();
+            tabPlaneShop.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvPlaneShop).BeginInit();
             SuspendLayout();
             // 
             // txtHost
@@ -210,6 +227,7 @@ namespace NewShopEditor
             tabControl.Controls.Add(tabNewShopMx);
             tabControl.Controls.Add(tabPage1);
             tabControl.Controls.Add(tabServant);
+            tabControl.Controls.Add(tabEventShop);
             tabControl.Location = new Point(10, 95);
             tabControl.Name = "tabControl";
             tabControl.SelectedIndex = 0;
@@ -541,7 +559,7 @@ namespace NewShopEditor
             // 
             // btnNewServerItem
             // 
-            btnNewServerItem.Location = new Point(10, 12);
+            btnNewServerItem.Location = new Point(6, 6);
             btnNewServerItem.Name = "btnNewServerItem";
             btnNewServerItem.Size = new Size(79, 23);
             btnNewServerItem.TabIndex = 1;
@@ -553,10 +571,10 @@ namespace NewShopEditor
             // 
             tabControl1.Controls.Add(tabGift);
             tabControl1.Controls.Add(tabSpirit);
-            tabControl1.Location = new Point(6, 41);
+            tabControl1.Location = new Point(6, 35);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(1238, 639);
+            tabControl1.Size = new Size(1238, 645);
             tabControl1.TabIndex = 0;
             // 
             // tabGift
@@ -565,7 +583,7 @@ namespace NewShopEditor
             tabGift.Location = new Point(4, 24);
             tabGift.Name = "tabGift";
             tabGift.Padding = new Padding(3);
-            tabGift.Size = new Size(1230, 611);
+            tabGift.Size = new Size(1230, 617);
             tabGift.TabIndex = 0;
             tabGift.Text = "Gift Master";
             tabGift.UseVisualStyleBackColor = true;
@@ -584,7 +602,7 @@ namespace NewShopEditor
             tabSpirit.Location = new Point(4, 24);
             tabSpirit.Name = "tabSpirit";
             tabSpirit.Padding = new Padding(3);
-            tabSpirit.Size = new Size(1230, 611);
+            tabSpirit.Size = new Size(1230, 617);
             tabSpirit.TabIndex = 1;
             tabSpirit.Text = "Spirit Master";
             tabSpirit.UseVisualStyleBackColor = true;
@@ -596,6 +614,95 @@ namespace NewShopEditor
             dgvSpirit.Name = "dgvSpirit";
             dgvSpirit.Size = new Size(1218, 599);
             dgvSpirit.TabIndex = 0;
+            // 
+            // tabEventShop
+            // 
+            tabEventShop.Controls.Add(btnNewEventItem);
+            tabEventShop.Controls.Add(tabControl2);
+            tabEventShop.Location = new Point(4, 24);
+            tabEventShop.Name = "tabEventShop";
+            tabEventShop.Padding = new Padding(3);
+            tabEventShop.Size = new Size(1250, 686);
+            tabEventShop.TabIndex = 4;
+            tabEventShop.Text = "Event Shop";
+            tabEventShop.UseVisualStyleBackColor = true;
+            // 
+            // btnNewEventItem
+            // 
+            btnNewEventItem.Location = new Point(6, 6);
+            btnNewEventItem.Name = "btnNewEventItem";
+            btnNewEventItem.Size = new Size(75, 23);
+            btnNewEventItem.TabIndex = 1;
+            btnNewEventItem.Text = "New Item";
+            btnNewEventItem.UseVisualStyleBackColor = true;
+            // 
+            // tabControl2
+            // 
+            tabControl2.Controls.Add(tabAstraShop);
+            tabControl2.Controls.Add(tabHonorShop);
+            tabControl2.Controls.Add(tabPlaneShop);
+            tabControl2.Location = new Point(6, 35);
+            tabControl2.Name = "tabControl2";
+            tabControl2.SelectedIndex = 0;
+            tabControl2.Size = new Size(1238, 645);
+            tabControl2.TabIndex = 0;
+            // 
+            // tabAstraShop
+            // 
+            tabAstraShop.Controls.Add(dgvAstraShop);
+            tabAstraShop.Location = new Point(4, 24);
+            tabAstraShop.Name = "tabAstraShop";
+            tabAstraShop.Padding = new Padding(3);
+            tabAstraShop.Size = new Size(1230, 617);
+            tabAstraShop.TabIndex = 0;
+            tabAstraShop.Text = "Astra Shop";
+            tabAstraShop.UseVisualStyleBackColor = true;
+            // 
+            // dgvAstraShop
+            // 
+            dgvAstraShop.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvAstraShop.Location = new Point(6, 6);
+            dgvAstraShop.Name = "dgvAstraShop";
+            dgvAstraShop.Size = new Size(1218, 605);
+            dgvAstraShop.TabIndex = 0;
+            // 
+            // tabHonorShop
+            // 
+            tabHonorShop.Controls.Add(dgvHonorShop);
+            tabHonorShop.Location = new Point(4, 24);
+            tabHonorShop.Name = "tabHonorShop";
+            tabHonorShop.Padding = new Padding(3);
+            tabHonorShop.Size = new Size(1230, 617);
+            tabHonorShop.TabIndex = 1;
+            tabHonorShop.Text = "Honor Shop";
+            tabHonorShop.UseVisualStyleBackColor = true;
+            // 
+            // dgvHonorShop
+            // 
+            dgvHonorShop.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvHonorShop.Location = new Point(6, 6);
+            dgvHonorShop.Name = "dgvHonorShop";
+            dgvHonorShop.Size = new Size(1218, 605);
+            dgvHonorShop.TabIndex = 0;
+            // 
+            // tabPlaneShop
+            // 
+            tabPlaneShop.Controls.Add(dgvPlaneShop);
+            tabPlaneShop.Location = new Point(4, 24);
+            tabPlaneShop.Name = "tabPlaneShop";
+            tabPlaneShop.Padding = new Padding(3);
+            tabPlaneShop.Size = new Size(1230, 617);
+            tabPlaneShop.TabIndex = 2;
+            tabPlaneShop.Text = "Plane Shop";
+            tabPlaneShop.UseVisualStyleBackColor = true;
+            // 
+            // dgvPlaneShop
+            // 
+            dgvPlaneShop.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvPlaneShop.Location = new Point(6, 6);
+            dgvPlaneShop.Name = "dgvPlaneShop";
+            dgvPlaneShop.Size = new Size(1218, 605);
+            dgvPlaneShop.TabIndex = 0;
             // 
             // label1
             // 
@@ -706,6 +813,14 @@ namespace NewShopEditor
             ((System.ComponentModel.ISupportInitialize)dgvGift).EndInit();
             tabSpirit.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dgvSpirit).EndInit();
+            tabEventShop.ResumeLayout(false);
+            tabControl2.ResumeLayout(false);
+            tabAstraShop.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvAstraShop).EndInit();
+            tabHonorShop.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvHonorShop).EndInit();
+            tabPlaneShop.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvPlaneShop).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -747,5 +862,14 @@ namespace NewShopEditor
         private TabPage tabSpirit;
         private DataGridView dgvSpirit;
         private Button btnNewServerItem;
+        private TabPage tabEventShop;
+        private Button btnNewEventItem;
+        private TabControl tabControl2;
+        private TabPage tabAstraShop;
+        private TabPage tabHonorShop;
+        private TabPage tabPlaneShop;
+        private DataGridView dgvAstraShop;
+        private DataGridView dgvHonorShop;
+        private DataGridView dgvPlaneShop;
     }
 }

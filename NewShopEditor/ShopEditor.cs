@@ -96,6 +96,12 @@ namespace NewShopEditor
         // Servant Craft (split)
         private DataTable dtGift, dtSpirit;
 
+
+        // ====== FIELDS (letak dalam class ShopEditor) ======
+        private DataTable dtAstraES, dtHonorES, dtPlaneES;
+
+        private const int EventShopDefaultVersion = 49213;
+
         public ShopEditor()
         {
             InitializeComponent();
@@ -292,6 +298,7 @@ namespace NewShopEditor
             dgvSpirit.DataBindingComplete -= DgvServant_AfterBind;
             dgvSpirit.DataBindingComplete += DgvServant_AfterBind;
 
+            btnNewEventItem.Click += btnNewEventItem_Click;
 
         }
 
@@ -2474,6 +2481,13 @@ namespace NewShopEditor
                 if (!string.IsNullOrEmpty(newShopMxDatPath))
                     NewShopMxDatHandler.Write(newShopMxDatPath, newShopMxCategories);
 
+                SaveEventShopIni();
+                using (var tx = conn.BeginTransaction())
+                {
+                    UpsertEventShopToDb(conn, tx);
+                    tx.Commit();
+                }
+
                 // === patch itemtype.fdb (harga) ===
                 try
                 {
@@ -3443,6 +3457,7 @@ namespace NewShopEditor
             LoadFollowPetInfo();
             LoadEudSkinInfo();
             LoadServantComposeSplit();
+            LoadEventShopIniSplit();
 
             //if (ShopDatHandler.hiddenShopIDs.Count > 0)
             //{
@@ -4735,6 +4750,14 @@ ON DUPLICATE KEY UPDATE
             }
         }
 
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////            
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private DataTable CreateServantTable()
         {
             var dt = new DataTable();
@@ -5317,6 +5340,615 @@ ON DUPLICATE KEY UPDATE
                 if (selectNeedtype == 2 && selectItem.HasValue) SelectServantRow(dgvSpirit, "item", selectItem.Value);
             }
         }
+
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////            
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+        // ====== CREATE TABLE SCHEMA ======
+        private DataTable CreateEventShopTable()
+        {
+            var dt = new DataTable();
+            dt.Columns.Add("shop_type", typeof(int));     // 1=Astra, 2=Honor, 4=Plane
+            dt.Columns.Add("id", typeof(int));            // <-- 2nd token in INI (explicit PK)
+            dt.Columns.Add("Itemtype", typeof(int));
+            dt.Columns.Add("ItemName", typeof(string));   // read-only, from itemtype.fdb (optional)
+            dt.Columns.Add("Priority", typeof(int));
+            dt.Columns.Add("Level_type", typeof(int));
+            dt.Columns.Add("Need_level", typeof(int));
+            dt.Columns.Add("Monopoly", typeof(int));
+            dt.Columns.Add("Talent_coin", typeof(int));
+            dt.Columns.Add("Eudemon_currency", typeof(int));
+            dt.Columns.Add("Item_currency", typeof(int));
+            dt.Columns.Add("Amount_type", typeof(int));
+            dt.Columns.Add("Amount_limit", typeof(int));
+            dt.Columns.Add("Begin_time", typeof(int));
+            dt.Columns.Add("End_time", typeof(int));
+            dt.Columns.Add("New_time", typeof(int));
+            dt.Columns.Add("Version", typeof(int));
+            return dt;
+        }
+
+        private void LoadEventShopIniSplit()
+        {
+            string iniPath = Path.Combine(txtClientPath.Text.Trim(), "ini", "activitynewshop.ini");
+            dtAstraES = CreateEventShopTable();
+            dtHonorES = CreateEventShopTable();
+            dtPlaneES = CreateEventShopTable();
+
+            try { EnsureItemNamesLoaded(); } catch { }
+
+            if (File.Exists(iniPath))
+            {
+                var lines = File.ReadAllLines(iniPath, Gbk);
+                foreach (var raw in lines)
+                {
+                    var line = raw.Trim();
+                    if (line.Length == 0 || line.StartsWith(";") || line.StartsWith("#")) continue;
+
+                    var p = line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+                    if (p.Length < 16) continue; // require 16 tokens
+
+                    int I(int idx) => int.TryParse(p[idx], out var v) ? v : 0;
+
+                    int shopType = I(0);
+                    int id = I(1);
+                    int item = I(2);
+
+                    var r = (shopType == 1 ? dtAstraES :
+                             shopType == 2 ? dtHonorES :
+                             shopType == 4 ? dtPlaneES : null)?.NewRow();
+                    if (r == null) continue;
+
+                    r["shop_type"] = shopType;
+                    r["id"] = id;
+                    r["Itemtype"] = item;
+                    r["ItemName"] = GetItemNameSafe(item); // optional name
+                    r["Priority"] = I(3);
+                    r["Level_type"] = I(4);
+                    r["Need_level"] = I(5);
+                    r["Monopoly"] = I(6);
+                    r["Talent_coin"] = I(7);
+                    r["Eudemon_currency"] = I(8);
+                    r["Item_currency"] = I(9);
+                    r["Amount_type"] = I(10);
+                    r["Amount_limit"] = I(11);
+                    r["Begin_time"] = I(12);
+                    r["End_time"] = I(13);
+                    r["New_time"] = I(14);
+                    r["Version"] = I(15);
+
+                    if (shopType == 1) dtAstraES.Rows.Add(r);
+                    else if (shopType == 2) dtHonorES.Rows.Add(r);
+                    else if (shopType == 4) dtPlaneES.Rows.Add(r);
+                }
+            }
+
+            BindAstraShopGrid();
+            BindHonorShopGrid();
+            BindPlaneShopGrid();
+        }
+
+        // ====== BIND GRIDS ======
+        private void BindAstraShopGrid()
+        {
+            if (dgvAstraShop == null) return;
+            dgvAstraShop.AutoGenerateColumns = true;
+            dgvAstraShop.DataBindingComplete -= DgvEventShop_AfterBind;
+            dgvAstraShop.DataSource = dtAstraES;
+            dgvAstraShop.DataBindingComplete += DgvEventShop_AfterBind;
+
+            dgvAstraShop.AllowUserToAddRows = false;
+            dgvAstraShop.AllowUserToResizeColumns = false;
+            dgvAstraShop.AllowUserToResizeRows = false;
+            dgvAstraShop.RowHeadersVisible = false;
+            dgvAstraShop.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvAstraShop.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            dgvAstraShop.ScrollBars = ScrollBars.Both;
+
+            foreach (DataGridViewColumn c in dgvAstraShop.Columns)
+            { c.SortMode = DataGridViewColumnSortMode.NotSortable; c.Resizable = DataGridViewTriState.False; }
+
+            LockEventShopCols(dgvAstraShop);
+            AttachDeleteContext(dgvAstraShop);
+            AttachEventShopMoves(dgvAstraShop);
+            EnsureDeleteAtBottom(dgvAstraShop);
+
+
+            AttachRowDragDrop(dgvAstraShop);   // ⬅️ enable drag & drop
+
+            DgvEventShop_AfterBind(dgvAstraShop, new DataGridViewBindingCompleteEventArgs(ListChangedType.Reset));
+        }
+
+        private void BindHonorShopGrid()
+        {
+            if (dgvHonorShop == null) return;
+            dgvHonorShop.AutoGenerateColumns = true;
+            dgvHonorShop.DataBindingComplete -= DgvEventShop_AfterBind;
+            dgvHonorShop.DataSource = dtHonorES;
+            dgvHonorShop.DataBindingComplete += DgvEventShop_AfterBind;
+
+            dgvHonorShop.AllowUserToAddRows = false;
+            dgvHonorShop.AllowUserToResizeColumns = false;
+            dgvHonorShop.AllowUserToResizeRows = false;
+            dgvHonorShop.RowHeadersVisible = false;
+            dgvHonorShop.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvHonorShop.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            dgvHonorShop.ScrollBars = ScrollBars.Both;
+
+            foreach (DataGridViewColumn c in dgvHonorShop.Columns)
+            { c.SortMode = DataGridViewColumnSortMode.NotSortable; c.Resizable = DataGridViewTriState.False; }
+
+            LockEventShopCols(dgvHonorShop);
+            AttachDeleteContext(dgvHonorShop);
+            AttachEventShopMoves(dgvHonorShop);
+            EnsureDeleteAtBottom(dgvHonorShop);
+
+            AttachRowDragDrop(dgvHonorShop);   // ⬅️ enable drag & drop
+
+            DgvEventShop_AfterBind(dgvHonorShop, new DataGridViewBindingCompleteEventArgs(ListChangedType.Reset));
+        }
+
+        private void BindPlaneShopGrid()
+        {
+            if (dgvPlaneShop == null) return;
+            dgvPlaneShop.AutoGenerateColumns = true;
+            dgvPlaneShop.DataBindingComplete -= DgvEventShop_AfterBind;
+            dgvPlaneShop.DataSource = dtPlaneES;
+            dgvPlaneShop.DataBindingComplete += DgvEventShop_AfterBind;
+
+            dgvPlaneShop.AllowUserToAddRows = false;
+            dgvPlaneShop.AllowUserToResizeColumns = false;
+            dgvPlaneShop.AllowUserToResizeRows = false;
+            dgvPlaneShop.RowHeadersVisible = false;
+            dgvPlaneShop.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvPlaneShop.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            dgvPlaneShop.ScrollBars = ScrollBars.Both;
+
+            foreach (DataGridViewColumn c in dgvPlaneShop.Columns)
+            { c.SortMode = DataGridViewColumnSortMode.NotSortable; c.Resizable = DataGridViewTriState.False; }
+
+            LockEventShopCols(dgvPlaneShop);
+            AttachDeleteContext(dgvPlaneShop);
+            AttachEventShopMoves(dgvPlaneShop);
+            EnsureDeleteAtBottom(dgvPlaneShop);
+
+            AttachRowDragDrop(dgvPlaneShop);   // ⬅️ enable drag & drop
+
+            DgvEventShop_AfterBind(dgvPlaneShop, new DataGridViewBindingCompleteEventArgs(ListChangedType.Reset));
+        }
+
+        // ====== LOCK + WIDTHS + H-SCROLL ======
+        private void DgvEventShop_AfterBind(object? s, DataGridViewBindingCompleteEventArgs e)
+        {
+            var gv = s as DataGridView; if (gv == null) return;
+
+            HideEventShopCols(gv); // <-- hide here
+
+            // widths (edit if needed, 'shop_type' & 'id' are hidden anyway)
+            var W = new Dictionary<string, int>
+            {
+                ["Itemtype"] = 110,
+                ["ItemName"] = 220,
+                ["Priority"] = 80,
+                ["Level_type"] = 90,
+                ["Need_level"] = 100,
+                ["Monopoly"] = 90,
+                ["Talent_coin"] = 110,
+                ["Eudemon_currency"] = 130,
+                ["Item_currency"] = 110,
+                ["Amount_type"] = 110,
+                ["Amount_limit"] = 110,
+                ["Begin_time"] = 110,
+                ["End_time"] = 110,
+                ["New_time"] = 100,
+                ["Version"] = 100
+            };
+            foreach (var kv in W)
+                if (gv.Columns.Contains(kv.Key)) { var c = gv.Columns[kv.Key]; c.AutoSizeMode = DataGridViewAutoSizeColumnMode.None; c.Width = kv.Value; }
+
+            EnsureHorizontalScroll(gv);
+        }
+
+
+        private void SaveEventShopIni()
+        {
+            ReindexEventShopIds(); // <-- ensure contiguous IDs
+
+            string iniPath = Path.Combine(txtClientPath.Text.Trim(), "ini", "activitynewshop.ini");
+            var all = CreateEventShopTable();
+            void addAll(DataTable src) { foreach (DataRow r in src.Rows) all.Rows.Add(r.ItemArray.Clone() as object[]); }
+            addAll(dtAstraES); addAll(dtHonorES); addAll(dtPlaneES);
+
+            var dv = new DataView(all) { Sort = "shop_type ASC, id ASC" };
+            var sb = new StringBuilder();
+            foreach (DataRow r in dv.ToTable().Rows)
+            {
+                int shop_type = ToInt(r["shop_type"]);
+                int id = ToInt(r["id"]);
+                int item = ToInt(r["Itemtype"]);
+                int[] arr =
+                {
+            ToInt(r["Priority"]), ToInt(r["Level_type"]), ToInt(r["Need_level"]),
+            ToInt(r["Monopoly"]), ToInt(r["Talent_coin"]), ToInt(r["Eudemon_currency"]),
+            ToInt(r["Item_currency"]), ToInt(r["Amount_type"]), ToInt(r["Amount_limit"]),
+            ToInt(r["Begin_time"]), ToInt(r["End_time"]), ToInt(r["New_time"]), ToInt(r["Version"])
+        };
+                sb.Append(shop_type).Append(' ').Append(id).Append(' ').Append(item);
+                foreach (var v in arr) sb.Append(' ').Append(v);
+                sb.AppendLine();
+            }
+
+            try { if (File.Exists(iniPath)) File.Copy(iniPath, iniPath + ".bak", true); } catch { }
+            File.WriteAllText(iniPath, sb.ToString(), Gbk);
+        }
+
+        // ====== UPSERT TO DB ======
+        private void UpsertEventShopToDb(MySql.Data.MySqlClient.MySqlConnection c, MySql.Data.MySqlClient.MySqlTransaction tx)
+        {
+            ReindexEventShopIds(); // <-- keep DB IDs in sync with INI
+
+            string sql = @"
+INSERT INTO cq_activitynewshop
+(id, shop_type, Itemtype, Priority, Level_type, Need_level, Monopoly,
+ Talent_coin, Eudemon_currency, Item_currency, Amount_type, Amount_limit,
+ Begin_time, End_time, New_time, Version)
+VALUES
+(@id,@shop_type,@Itemtype,@Priority,@Level_type,@Need_level,@Monopoly,
+ @Talent_coin,@Eudemon_currency,@Item_currency,@Amount_type,@Amount_limit,
+ @Begin_time,@End_time,@New_time,@Version)
+ON DUPLICATE KEY UPDATE
+ shop_type=VALUES(shop_type),
+ Itemtype=VALUES(Itemtype),
+ Priority=VALUES(Priority),
+ Level_type=VALUES(Level_type),
+ Need_level=VALUES(Need_level),
+ Monopoly=VALUES(Monopoly),
+ Talent_coin=VALUES(Talent_coin),
+ Eudemon_currency=VALUES(Eudemon_currency),
+ Item_currency=VALUES(Item_currency),
+ Amount_type=VALUES(Amount_type),
+ Amount_limit=VALUES(Amount_limit),
+ Begin_time=VALUES(Begin_time),
+ End_time=VALUES(End_time),
+ New_time=VALUES(New_time),
+ Version=VALUES(Version);";
+
+            using var cmd = new MySql.Data.MySqlClient.MySqlCommand(sql, c, tx);
+            var p = new Func<string, MySql.Data.MySqlClient.MySqlParameter>(name =>
+                cmd.Parameters.Add(name, MySql.Data.MySqlClient.MySqlDbType.Int32));
+
+            var pid = p("@id"); var pshop = p("@shop_type"); var pitem = p("@Itemtype");
+            var ppri = p("@Priority"); var plt = p("@Level_type"); var pnl = p("@Need_level");
+            var pmono = p("@Monopoly"); var ptc = p("@Talent_coin"); var peu = p("@Eudemon_currency");
+            var pic = p("@Item_currency"); var pat = p("@Amount_type"); var pal = p("@Amount_limit");
+            var pbt = p("@Begin_time"); var pet = p("@End_time"); var pnt = p("@New_time"); var pver = p("@Version");
+
+            void push(DataTable dt, int shopType)
+            {
+                foreach (DataRow r in dt.Rows)
+                {
+                    pid.Value = ToInt(r["id"]);
+                    pshop.Value = shopType;
+                    pitem.Value = ToInt(r["Itemtype"]);
+                    ppri.Value = ToInt(r["Priority"]);
+                    plt.Value = ToInt(r["Level_type"]);
+                    pnl.Value = ToInt(r["Need_level"]);
+                    pmono.Value = ToInt(r["Monopoly"]);
+                    ptc.Value = ToInt(r["Talent_coin"]);
+                    peu.Value = ToInt(r["Eudemon_currency"]);
+                    pic.Value = ToInt(r["Item_currency"]);
+                    pat.Value = ToInt(r["Amount_type"]);
+                    pal.Value = ToInt(r["Amount_limit"]);
+                    pbt.Value = ToInt(r["Begin_time"]);
+                    pet.Value = ToInt(r["End_time"]);
+                    pnt.Value = ToInt(r["New_time"]);
+                    pver.Value = ToInt(r["Version"]);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            push(dtAstraES, 1);
+            push(dtHonorES, 2);
+            push(dtPlaneES, 4);
+        }
+
+        // Call this before saving INI/DB so IDs are contiguous across all shops
+        private void ReindexEventShopIds()
+        {
+            int next = 1;
+
+            void reindex(DataTable dt, int shopType)
+            {
+                if (dt == null) return;
+                foreach (DataRow r in dt.Rows)
+                {
+                    r["shop_type"] = shopType; // keep correct type
+                    r["id"] = next++;          // contiguous id
+                }
+            }
+
+            reindex(dtAstraES, 1);
+            reindex(dtHonorES, 2);
+            reindex(dtPlaneES, 4);
+        }
+
+        private void HideEventShopCols(DataGridView gv)
+        {
+            void Hide(string name)
+            {
+                if (gv.Columns.Contains(name))
+                    gv.Columns[name].Visible = false;
+            }
+            Hide("shop_type");
+            Hide("id");
+        }
+
+        private void LockEventShopCols(DataGridView gv)
+        {
+            void Lock(string col, bool grey = true)
+            {
+                if (!gv.Columns.Contains(col)) return;
+                var c = gv.Columns[col];
+                c.ReadOnly = true;
+                if (grey)
+                {
+                    c.DefaultCellStyle.BackColor = Color.Gainsboro;
+                    c.DefaultCellStyle.SelectionBackColor = Color.Gainsboro;
+                    c.DefaultCellStyle.SelectionForeColor = Color.Black;
+                }
+                c.SortMode = DataGridViewColumnSortMode.NotSortable;
+                c.Resizable = DataGridViewTriState.False;
+            }
+            Lock("ItemName");
+            Lock("Itemtype");          // ⬅️ itemtype read-only
+                                       // kalau nak kekalkan hide:
+                                       // Lock("shop_type"); Lock("id");
+        }
+
+        // --- drag & drop row reordering for EventShop grids ---
+        private int _esDragIndex = -1;
+
+        private void AttachRowDragDrop(DataGridView gv)
+        {
+            if (gv == null) return;
+            if (gv.Tag as string == "drag-attach") return; // avoid double hook
+
+            gv.AllowDrop = true;
+
+            gv.MouseDown += (s, e) =>
+            {
+                if (e.Button != MouseButtons.Left) return;
+                var hit = gv.HitTest(e.X, e.Y);
+                _esDragIndex = hit.RowIndex;
+            };
+
+            gv.MouseMove += (s, e) =>
+            {
+                if ((e.Button & MouseButtons.Left) == 0) return;
+                if (_esDragIndex < 0 || _esDragIndex >= gv.Rows.Count) return;
+                if (gv.Rows[_esDragIndex].IsNewRow) return;
+                gv.DoDragDrop(gv.Rows[_esDragIndex], DragDropEffects.Move);
+            };
+
+            gv.DragOver += (s, e) =>
+            {
+                e.Effect = e.Data.GetDataPresent(typeof(DataGridViewRow))
+                    ? DragDropEffects.Move : DragDropEffects.None;
+            };
+
+            gv.DragDrop += (s, e) =>
+            {
+                try
+                {
+                    var pt = gv.PointToClient(new Point(e.X, e.Y));
+                    var hit = gv.HitTest(pt.X, pt.Y);
+                    int toIndex = hit.RowIndex;
+                    if (toIndex < 0) toIndex = gv.Rows.Count - 1;
+                    if (_esDragIndex >= 0 && toIndex >= 0 && toIndex != _esDragIndex)
+                        MoveEventShopRow(gv, _esDragIndex, toIndex);
+                }
+                finally { _esDragIndex = -1; }
+            };
+
+            gv.MouseUp += (s, e) => { _esDragIndex = -1; };
+
+            gv.Tag = "drag-attach";
+        }
+
+        // kekalkan scroll position bila susun semula
+        private void MoveEventShopRow(DataGridView gv, int from, int to)
+        {
+            if (gv?.DataSource is not DataTable dt) return;
+            if (from < 0 || from >= dt.Rows.Count || to < 0 || to >= dt.Rows.Count || from == to) return;
+
+            // snapshot scroll pos
+            int oldFirstRow = -1, oldFirstCol = -1;
+            try { oldFirstRow = gv.FirstDisplayedScrollingRowIndex; } catch { }
+            try { oldFirstCol = gv.FirstDisplayedScrollingColumnIndex; } catch { }
+
+            gv.SuspendLayout();
+            try
+            {
+                // clone & move
+                var data = (object[])dt.Rows[from].ItemArray.Clone();
+                var newRow = dt.NewRow(); newRow.ItemArray = data;
+                dt.Rows.RemoveAt(from);
+                dt.Rows.InsertAt(newRow, to);
+
+                // highlight row baru TANPA set CurrentCell (elak auto-scroll)
+                foreach (DataGridViewRow rr in gv.Rows) rr.Selected = false;
+                int vis = Math.Max(0, Math.Min(to, gv.Rows.Count - 1));
+                if (gv.Rows.Count > 0) gv.Rows[vis].Selected = true;
+
+                // restore scroll pos
+                if (oldFirstRow >= 0 && oldFirstRow < gv.Rows.Count)
+                    gv.FirstDisplayedScrollingRowIndex = oldFirstRow;
+                if (oldFirstCol >= 0 && oldFirstCol < gv.Columns.Count)
+                    gv.FirstDisplayedScrollingColumnIndex = oldFirstCol;
+            }
+            finally
+            {
+                gv.ResumeLayout();
+            }
+        }
+
+
+        // ===== EventShop: Right-click "Move to top/bottom" =====
+        private void AttachEventShopMoves(DataGridView gv)
+        {
+            if (gv == null) return;
+            // elak duplicate
+            if ((gv.Tag as string)?.Contains("ctx-es-move") == true) return;
+
+            // pastikan ada context menu (merge dengan yang sedia ada)
+            var cms = gv.ContextMenuStrip ?? new ContextMenuStrip();
+
+            // separator kecil
+            cms.Items.Add(new ToolStripSeparator());
+
+            var miTop = new ToolStripMenuItem("Move to top");
+            miTop.Click += (s, e) =>
+            {
+                if (gv.CurrentRow == null || gv.CurrentRow.IsNewRow) return;
+                int from = gv.CurrentRow.Index;
+                MoveEventShopRow(gv, from, 0);
+            };
+            cms.Items.Add(miTop);
+
+            var miBottom = new ToolStripMenuItem("Move to bottom");
+            miBottom.Click += (s, e) =>
+            {
+                if (gv.CurrentRow == null || gv.CurrentRow.IsNewRow) return;
+                int from = gv.CurrentRow.Index;
+                int to = Math.Max(0, gv.Rows.Count - 1);
+                MoveEventShopRow(gv, from, to);
+            };
+            cms.Items.Add(miBottom);
+
+            // right-click pilih row di cursor (kalau belum ada daripada AttachDeleteContext)
+            gv.MouseDown += (s, e) =>
+            {
+                if (e.Button != MouseButtons.Right) return;
+                var hit = gv.HitTest(e.X, e.Y);
+                if (hit.RowIndex >= 0)
+                {
+                    gv.ClearSelection();
+                    gv.CurrentCell = gv.Rows[hit.RowIndex].Cells[Math.Max(0, hit.ColumnIndex)];
+                    gv.Rows[hit.RowIndex].Selected = true;
+                }
+            };
+
+            gv.ContextMenuStrip = cms;
+            gv.Tag = ((gv.Tag as string) ?? "") + "|ctx-es-move";
+        }
+
+        // === Pastikan "Delete selected" duduk di bahagian bawah menu ===
+        private void EnsureDeleteAtBottom(DataGridView gv)
+        {
+            if (gv?.ContextMenuStrip == null) return;
+            var cms = gv.ContextMenuStrip;
+
+            ToolStripItem del = null;
+            foreach (ToolStripItem it in cms.Items)
+                if (it is ToolStripMenuItem mi && mi.Text == "Delete selected") { del = it; break; }
+
+            if (del != null)
+            {
+                cms.Items.Remove(del);
+                // tambah separator kalau item terakhir bukan separator
+                if (cms.Items.Count > 0 && !(cms.Items[cms.Items.Count - 1] is ToolStripSeparator))
+                    cms.Items.Add(new ToolStripSeparator());
+                cms.Items.Add(del); // letak paling bawah
+            }
+        }
+
+        // add new EventShop item via dialog
+        // pakai helper nama item yang kau dah ada
+        // private string GetItemNameSafe(int id) { ... }
+
+        // ===== helper: select row by value tanpa ubah scroll =====
+        private void SelectEventShopRow(DataGridView gv, string col, int value)
+        {
+            if (gv == null || !gv.Columns.Contains(col)) return;
+
+            int oldFirstRow = -1, oldFirstCol = -1;
+            try { oldFirstRow = gv.FirstDisplayedScrollingRowIndex; } catch { }
+            try { oldFirstCol = gv.FirstDisplayedScrollingColumnIndex; } catch { }
+
+            foreach (DataGridViewRow row in gv.Rows)
+            {
+                if (row.IsNewRow) continue;
+                if (int.TryParse(Convert.ToString(row.Cells[col].Value), out int v) && v == value)
+                {
+                    gv.ClearSelection();
+                    row.Selected = true;
+                    // JANGAN set CurrentCell kalau tak nak auto-scroll; cukup highlight
+                    break;
+                }
+            }
+
+            if (oldFirstRow >= 0 && oldFirstRow < gv.Rows.Count)
+                gv.FirstDisplayedScrollingRowIndex = oldFirstRow;
+            if (oldFirstCol >= 0 && oldFirstCol < gv.Columns.Count)
+                gv.FirstDisplayedScrollingColumnIndex = oldFirstCol;
+        }
+
+        // ===== click handler =====
+        private void btnNewEventItem_Click(object sender, EventArgs e)
+        {
+            var frm = new NewShopEditor.NewEventItem
+            {
+                ItemSource = _it?.ById?.Select(kv => ((int)kv.Key, kv.Value.Name ?? "")).ToList()
+                             ?? new List<(int, string)>(),
+                ResolveItemName = id => GetItemNameSafe(id)
+            };
+            if (frm.ShowDialog(this) != DialogResult.OK) return;
+
+            int shopType = frm.SelectedShopType;
+            int itemId = frm.SelectedItemId;
+            if (itemId <= 0) return;
+
+            DataTable dt = shopType == 1 ? dtAstraES : shopType == 2 ? dtHonorES : dtPlaneES;
+            DataGridView gv = shopType == 1 ? dgvAstraShop : shopType == 2 ? dgvHonorShop : dgvPlaneShop;
+
+            if (dt.Select("Itemtype = " + itemId).Length > 0)
+            { SelectEventShopRow(gv, "Itemtype", itemId); return; }
+
+            var r = dt.NewRow();
+            r["shop_type"] = shopType;
+            r["id"] = 0;
+            r["Itemtype"] = itemId;
+            r["ItemName"] = GetItemNameSafe(itemId);
+            r["Priority"] = 0;
+            r["Level_type"] = 0;
+            r["Need_level"] = 0;
+            r["Monopoly"] = 1;
+            r["Talent_coin"] = frm.EnteredTalentCoin;   // <-- dari txtPrice
+            r["Eudemon_currency"] = 0;
+            r["Item_currency"] = 0;
+            r["Amount_type"] = 0;
+            r["Amount_limit"] = 0;
+            r["Begin_time"] = 0;
+            r["End_time"] = 0;
+            r["New_time"] = 0;
+            r["Version"] = EventShopDefaultVersion; // <-- 49213
+            dt.Rows.Add(r);
+
+            SelectEventShopRow(gv, "Itemtype", itemId);
+        }
+
+
+
+
     }
 
 
