@@ -44,6 +44,7 @@ namespace NewShopEditor
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ShopEditor));
             txtHost = new TextBox();
             txtPort = new TextBox();
             txtUser = new TextBox();
@@ -55,6 +56,7 @@ namespace NewShopEditor
             btnSave = new Button();
             tabControl = new TabControl();
             tabShop = new TabPage();
+            btnUptName = new Button();
             btnNewItem = new Button();
             btnNewShop = new Button();
             lblShopList = new Label();
@@ -62,23 +64,72 @@ namespace NewShopEditor
             dgvShops = new DataGridView();
             dgvItems = new DataGridView();
             tabNewShopMx = new TabPage();
+            btnNewMallItem = new Button();
             lblMxCategoryList = new Label();
             tvMxCategories = new TreeView();
             lblNewShopMxItems = new Label();
             dgvNewShopMxItems = new DataGridView();
+            tabPage1 = new TabPage();
+            tabWardrobe = new TabControl();
+            tabCasual = new TabPage();
+            dgvWBCasual = new DataGridView();
+            tabWeapon = new TabPage();
+            dgvWBWeapon = new DataGridView();
+            tabAvatar = new TabPage();
+            dgvWBAvatar = new DataGridView();
+            tabDecor = new TabPage();
+            dgvWBDecor = new DataGridView();
+            tabToy = new TabPage();
+            dgvWBToy = new DataGridView();
+            tabHair = new TabPage();
+            dgvWBHair = new DataGridView();
+            tabFollowPet = new TabPage();
+            dgvWBFPet = new DataGridView();
+            tabEudSkin = new TabPage();
+            dgvWBEudSkin = new DataGridView();
+            tabServant = new TabPage();
+            btnNewServerItem = new Button();
+            tabControl1 = new TabControl();
+            tabGift = new TabPage();
+            dgvGift = new DataGridView();
+            tabSpirit = new TabPage();
+            dgvSpirit = new DataGridView();
             label1 = new Label();
             label2 = new Label();
             label3 = new Label();
             label4 = new Label();
             label5 = new Label();
             label6 = new Label();
-            btnNewMallItem = new Button();
             tabControl.SuspendLayout();
             tabShop.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvShops).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgvItems).BeginInit();
             tabNewShopMx.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvNewShopMxItems).BeginInit();
+            tabPage1.SuspendLayout();
+            tabWardrobe.SuspendLayout();
+            tabCasual.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvWBCasual).BeginInit();
+            tabWeapon.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvWBWeapon).BeginInit();
+            tabAvatar.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvWBAvatar).BeginInit();
+            tabDecor.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvWBDecor).BeginInit();
+            tabToy.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvWBToy).BeginInit();
+            tabHair.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvWBHair).BeginInit();
+            tabFollowPet.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvWBFPet).BeginInit();
+            tabEudSkin.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvWBEudSkin).BeginInit();
+            tabServant.SuspendLayout();
+            tabControl1.SuspendLayout();
+            tabGift.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvGift).BeginInit();
+            tabSpirit.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvSpirit).BeginInit();
             SuspendLayout();
             // 
             // txtHost
@@ -134,14 +185,14 @@ namespace NewShopEditor
             // 
             txtClientPath.Location = new Point(96, 58);
             txtClientPath.Name = "txtClientPath";
-            txtClientPath.Size = new Size(523, 23);
+            txtClientPath.Size = new Size(541, 23);
             txtClientPath.TabIndex = 11;
             // 
             // btnFindPath
             // 
-            btnFindPath.Location = new Point(643, 58);
+            btnFindPath.Location = new Point(643, 59);
             btnFindPath.Name = "btnFindPath";
-            btnFindPath.Size = new Size(87, 23);
+            btnFindPath.Size = new Size(85, 23);
             btnFindPath.TabIndex = 12;
             btnFindPath.Text = "Find...";
             // 
@@ -157,14 +208,17 @@ namespace NewShopEditor
             // 
             tabControl.Controls.Add(tabShop);
             tabControl.Controls.Add(tabNewShopMx);
+            tabControl.Controls.Add(tabPage1);
+            tabControl.Controls.Add(tabServant);
             tabControl.Location = new Point(10, 95);
             tabControl.Name = "tabControl";
             tabControl.SelectedIndex = 0;
-            tabControl.Size = new Size(1341, 801);
+            tabControl.Size = new Size(1258, 714);
             tabControl.TabIndex = 15;
             // 
             // tabShop
             // 
+            tabShop.Controls.Add(btnUptName);
             tabShop.Controls.Add(btnNewItem);
             tabShop.Controls.Add(btnNewShop);
             tabShop.Controls.Add(lblShopList);
@@ -173,18 +227,28 @@ namespace NewShopEditor
             tabShop.Controls.Add(dgvItems);
             tabShop.Location = new Point(4, 24);
             tabShop.Name = "tabShop";
-            tabShop.Size = new Size(1333, 773);
+            tabShop.Size = new Size(1250, 686);
             tabShop.TabIndex = 0;
-            tabShop.Text = "Shop.dat";
+            tabShop.Text = "All Shop";
+            // 
+            // btnUptName
+            // 
+            btnUptName.Location = new Point(101, 15);
+            btnUptName.Name = "btnUptName";
+            btnUptName.Size = new Size(110, 23);
+            btnUptName.TabIndex = 6;
+            btnUptName.Text = "Update Name";
+            btnUptName.UseVisualStyleBackColor = true;
             // 
             // btnNewItem
             // 
-            btnNewItem.Location = new Point(616, 15);
+            btnNewItem.Location = new Point(570, 15);
             btnNewItem.Name = "btnNewItem";
             btnNewItem.Size = new Size(75, 23);
             btnNewItem.TabIndex = 5;
             btnNewItem.Text = "New Item";
             btnNewItem.UseVisualStyleBackColor = true;
+            btnNewItem.Click += btnNewItem_Click;
             // 
             // btnNewShop
             // 
@@ -194,6 +258,7 @@ namespace NewShopEditor
             btnNewShop.TabIndex = 4;
             btnNewShop.Text = "New Shop";
             btnNewShop.UseVisualStyleBackColor = true;
+            btnNewShop.Click += btnNewShop_Click;
             // 
             // lblShopList
             // 
@@ -205,7 +270,7 @@ namespace NewShopEditor
             // 
             // lblItemList
             // 
-            lblItemList.Location = new Point(611, 45);
+            lblItemList.Location = new Point(570, 45);
             lblItemList.Name = "lblItemList";
             lblItemList.Size = new Size(100, 23);
             lblItemList.TabIndex = 1;
@@ -215,14 +280,14 @@ namespace NewShopEditor
             // 
             dgvShops.Location = new Point(20, 71);
             dgvShops.Name = "dgvShops";
-            dgvShops.Size = new Size(585, 702);
+            dgvShops.Size = new Size(538, 595);
             dgvShops.TabIndex = 2;
             // 
             // dgvItems
             // 
-            dgvItems.Location = new Point(611, 71);
+            dgvItems.Location = new Point(570, 71);
             dgvItems.Name = "dgvItems";
-            dgvItems.Size = new Size(719, 702);
+            dgvItems.Size = new Size(667, 595);
             dgvItems.TabIndex = 3;
             // 
             // tabNewShopMx
@@ -234,13 +299,23 @@ namespace NewShopEditor
             tabNewShopMx.Controls.Add(dgvNewShopMxItems);
             tabNewShopMx.Location = new Point(4, 24);
             tabNewShopMx.Name = "tabNewShopMx";
-            tabNewShopMx.Size = new Size(1333, 773);
+            tabNewShopMx.Size = new Size(1250, 686);
             tabNewShopMx.TabIndex = 1;
-            tabNewShopMx.Text = "NewShopMx.dat";
+            tabNewShopMx.Text = "VIP Shop/Mall";
+            // 
+            // btnNewMallItem
+            // 
+            btnNewMallItem.Location = new Point(264, 10);
+            btnNewMallItem.Name = "btnNewMallItem";
+            btnNewMallItem.Size = new Size(75, 23);
+            btnNewMallItem.TabIndex = 4;
+            btnNewMallItem.Text = "New Item";
+            btnNewMallItem.UseVisualStyleBackColor = true;
+            btnNewMallItem.Click += btnNewMallItem_Click;
             // 
             // lblMxCategoryList
             // 
-            lblMxCategoryList.Location = new Point(20, 10);
+            lblMxCategoryList.Location = new Point(20, 36);
             lblMxCategoryList.Name = "lblMxCategoryList";
             lblMxCategoryList.Size = new Size(120, 23);
             lblMxCategoryList.TabIndex = 0;
@@ -248,14 +323,14 @@ namespace NewShopEditor
             // 
             // tvMxCategories
             // 
-            tvMxCategories.Location = new Point(20, 28);
+            tvMxCategories.Location = new Point(20, 62);
             tvMxCategories.Name = "tvMxCategories";
-            tvMxCategories.Size = new Size(304, 721);
+            tvMxCategories.Size = new Size(236, 610);
             tvMxCategories.TabIndex = 1;
             // 
             // lblNewShopMxItems
             // 
-            lblNewShopMxItems.Location = new Point(349, 54);
+            lblNewShopMxItems.Location = new Point(264, 36);
             lblNewShopMxItems.Name = "lblNewShopMxItems";
             lblNewShopMxItems.Size = new Size(160, 23);
             lblNewShopMxItems.TabIndex = 2;
@@ -264,12 +339,263 @@ namespace NewShopEditor
             // dgvNewShopMxItems
             // 
             dgvNewShopMxItems.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvNewShopMxItems.Location = new Point(349, 80);
+            dgvNewShopMxItems.Location = new Point(264, 62);
             dgvNewShopMxItems.MultiSelect = false;
             dgvNewShopMxItems.Name = "dgvNewShopMxItems";
             dgvNewShopMxItems.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvNewShopMxItems.Size = new Size(981, 669);
+            dgvNewShopMxItems.Size = new Size(971, 610);
             dgvNewShopMxItems.TabIndex = 3;
+            // 
+            // tabPage1
+            // 
+            tabPage1.Controls.Add(tabWardrobe);
+            tabPage1.Location = new Point(4, 24);
+            tabPage1.Name = "tabPage1";
+            tabPage1.Padding = new Padding(3);
+            tabPage1.Size = new Size(1250, 686);
+            tabPage1.TabIndex = 2;
+            tabPage1.Text = "Wardrobe Buy";
+            tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // tabWardrobe
+            // 
+            tabWardrobe.Controls.Add(tabCasual);
+            tabWardrobe.Controls.Add(tabWeapon);
+            tabWardrobe.Controls.Add(tabAvatar);
+            tabWardrobe.Controls.Add(tabDecor);
+            tabWardrobe.Controls.Add(tabToy);
+            tabWardrobe.Controls.Add(tabHair);
+            tabWardrobe.Controls.Add(tabFollowPet);
+            tabWardrobe.Controls.Add(tabEudSkin);
+            tabWardrobe.Location = new Point(8, 6);
+            tabWardrobe.Name = "tabWardrobe";
+            tabWardrobe.SelectedIndex = 0;
+            tabWardrobe.Size = new Size(1236, 674);
+            tabWardrobe.TabIndex = 0;
+            // 
+            // tabCasual
+            // 
+            tabCasual.Controls.Add(dgvWBCasual);
+            tabCasual.Location = new Point(4, 24);
+            tabCasual.Name = "tabCasual";
+            tabCasual.Padding = new Padding(3);
+            tabCasual.Size = new Size(1228, 646);
+            tabCasual.TabIndex = 0;
+            tabCasual.Text = "Casual";
+            tabCasual.UseVisualStyleBackColor = true;
+            // 
+            // dgvWBCasual
+            // 
+            dgvWBCasual.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvWBCasual.Location = new Point(6, 6);
+            dgvWBCasual.Name = "dgvWBCasual";
+            dgvWBCasual.Size = new Size(1216, 634);
+            dgvWBCasual.TabIndex = 0;
+            // 
+            // tabWeapon
+            // 
+            tabWeapon.Controls.Add(dgvWBWeapon);
+            tabWeapon.Location = new Point(4, 24);
+            tabWeapon.Name = "tabWeapon";
+            tabWeapon.Padding = new Padding(3);
+            tabWeapon.Size = new Size(1228, 646);
+            tabWeapon.TabIndex = 1;
+            tabWeapon.Text = "Weapon Soul";
+            tabWeapon.UseVisualStyleBackColor = true;
+            // 
+            // dgvWBWeapon
+            // 
+            dgvWBWeapon.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvWBWeapon.Location = new Point(6, 6);
+            dgvWBWeapon.Name = "dgvWBWeapon";
+            dgvWBWeapon.Size = new Size(1216, 634);
+            dgvWBWeapon.TabIndex = 0;
+            // 
+            // tabAvatar
+            // 
+            tabAvatar.Controls.Add(dgvWBAvatar);
+            tabAvatar.Location = new Point(4, 24);
+            tabAvatar.Name = "tabAvatar";
+            tabAvatar.Padding = new Padding(3);
+            tabAvatar.Size = new Size(1228, 646);
+            tabAvatar.TabIndex = 2;
+            tabAvatar.Text = "Avatar";
+            tabAvatar.UseVisualStyleBackColor = true;
+            // 
+            // dgvWBAvatar
+            // 
+            dgvWBAvatar.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvWBAvatar.Location = new Point(6, 6);
+            dgvWBAvatar.Name = "dgvWBAvatar";
+            dgvWBAvatar.Size = new Size(1216, 634);
+            dgvWBAvatar.TabIndex = 0;
+            // 
+            // tabDecor
+            // 
+            tabDecor.Controls.Add(dgvWBDecor);
+            tabDecor.Location = new Point(4, 24);
+            tabDecor.Name = "tabDecor";
+            tabDecor.Padding = new Padding(3);
+            tabDecor.Size = new Size(1228, 646);
+            tabDecor.TabIndex = 3;
+            tabDecor.Text = "Decoration";
+            tabDecor.UseVisualStyleBackColor = true;
+            // 
+            // dgvWBDecor
+            // 
+            dgvWBDecor.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvWBDecor.Location = new Point(6, 6);
+            dgvWBDecor.Name = "dgvWBDecor";
+            dgvWBDecor.Size = new Size(1216, 634);
+            dgvWBDecor.TabIndex = 0;
+            // 
+            // tabToy
+            // 
+            tabToy.Controls.Add(dgvWBToy);
+            tabToy.Location = new Point(4, 24);
+            tabToy.Name = "tabToy";
+            tabToy.Padding = new Padding(3);
+            tabToy.Size = new Size(1228, 646);
+            tabToy.TabIndex = 4;
+            tabToy.Text = "Toy";
+            tabToy.UseVisualStyleBackColor = true;
+            // 
+            // dgvWBToy
+            // 
+            dgvWBToy.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvWBToy.Location = new Point(6, 6);
+            dgvWBToy.Name = "dgvWBToy";
+            dgvWBToy.Size = new Size(1216, 634);
+            dgvWBToy.TabIndex = 0;
+            // 
+            // tabHair
+            // 
+            tabHair.Controls.Add(dgvWBHair);
+            tabHair.Location = new Point(4, 24);
+            tabHair.Name = "tabHair";
+            tabHair.Padding = new Padding(3);
+            tabHair.Size = new Size(1228, 646);
+            tabHair.TabIndex = 5;
+            tabHair.Text = "Hair";
+            tabHair.UseVisualStyleBackColor = true;
+            // 
+            // dgvWBHair
+            // 
+            dgvWBHair.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvWBHair.Location = new Point(6, 6);
+            dgvWBHair.Name = "dgvWBHair";
+            dgvWBHair.Size = new Size(1216, 634);
+            dgvWBHair.TabIndex = 0;
+            // 
+            // tabFollowPet
+            // 
+            tabFollowPet.Controls.Add(dgvWBFPet);
+            tabFollowPet.Location = new Point(4, 24);
+            tabFollowPet.Name = "tabFollowPet";
+            tabFollowPet.Padding = new Padding(3);
+            tabFollowPet.Size = new Size(1228, 646);
+            tabFollowPet.TabIndex = 6;
+            tabFollowPet.Text = "Follow Pet";
+            tabFollowPet.UseVisualStyleBackColor = true;
+            // 
+            // dgvWBFPet
+            // 
+            dgvWBFPet.AllowUserToAddRows = false;
+            dgvWBFPet.AllowUserToDeleteRows = false;
+            dgvWBFPet.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvWBFPet.Location = new Point(6, 6);
+            dgvWBFPet.Name = "dgvWBFPet";
+            dgvWBFPet.Size = new Size(1216, 634);
+            dgvWBFPet.TabIndex = 0;
+            // 
+            // tabEudSkin
+            // 
+            tabEudSkin.Controls.Add(dgvWBEudSkin);
+            tabEudSkin.Location = new Point(4, 24);
+            tabEudSkin.Name = "tabEudSkin";
+            tabEudSkin.Padding = new Padding(3);
+            tabEudSkin.Size = new Size(1228, 646);
+            tabEudSkin.TabIndex = 7;
+            tabEudSkin.Text = "Eudemon Skin";
+            tabEudSkin.UseVisualStyleBackColor = true;
+            // 
+            // dgvWBEudSkin
+            // 
+            dgvWBEudSkin.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvWBEudSkin.Location = new Point(6, 6);
+            dgvWBEudSkin.Name = "dgvWBEudSkin";
+            dgvWBEudSkin.Size = new Size(1216, 634);
+            dgvWBEudSkin.TabIndex = 0;
+            // 
+            // tabServant
+            // 
+            tabServant.Controls.Add(btnNewServerItem);
+            tabServant.Controls.Add(tabControl1);
+            tabServant.Location = new Point(4, 24);
+            tabServant.Name = "tabServant";
+            tabServant.Padding = new Padding(3);
+            tabServant.Size = new Size(1250, 686);
+            tabServant.TabIndex = 3;
+            tabServant.Text = "Servant Craft";
+            tabServant.UseVisualStyleBackColor = true;
+            // 
+            // btnNewServerItem
+            // 
+            btnNewServerItem.Location = new Point(10, 12);
+            btnNewServerItem.Name = "btnNewServerItem";
+            btnNewServerItem.Size = new Size(79, 23);
+            btnNewServerItem.TabIndex = 1;
+            btnNewServerItem.Text = "New Item";
+            btnNewServerItem.UseVisualStyleBackColor = true;
+            btnNewServerItem.Click += btnNewServerItem_Click;
+            // 
+            // tabControl1
+            // 
+            tabControl1.Controls.Add(tabGift);
+            tabControl1.Controls.Add(tabSpirit);
+            tabControl1.Location = new Point(6, 41);
+            tabControl1.Name = "tabControl1";
+            tabControl1.SelectedIndex = 0;
+            tabControl1.Size = new Size(1238, 639);
+            tabControl1.TabIndex = 0;
+            // 
+            // tabGift
+            // 
+            tabGift.Controls.Add(dgvGift);
+            tabGift.Location = new Point(4, 24);
+            tabGift.Name = "tabGift";
+            tabGift.Padding = new Padding(3);
+            tabGift.Size = new Size(1230, 611);
+            tabGift.TabIndex = 0;
+            tabGift.Text = "Gift Master";
+            tabGift.UseVisualStyleBackColor = true;
+            // 
+            // dgvGift
+            // 
+            dgvGift.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvGift.Location = new Point(6, 6);
+            dgvGift.Name = "dgvGift";
+            dgvGift.Size = new Size(1218, 599);
+            dgvGift.TabIndex = 0;
+            // 
+            // tabSpirit
+            // 
+            tabSpirit.Controls.Add(dgvSpirit);
+            tabSpirit.Location = new Point(4, 24);
+            tabSpirit.Name = "tabSpirit";
+            tabSpirit.Padding = new Padding(3);
+            tabSpirit.Size = new Size(1230, 611);
+            tabSpirit.TabIndex = 1;
+            tabSpirit.Text = "Spirit Master";
+            tabSpirit.UseVisualStyleBackColor = true;
+            // 
+            // dgvSpirit
+            // 
+            dgvSpirit.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvSpirit.Location = new Point(6, 6);
+            dgvSpirit.Name = "dgvSpirit";
+            dgvSpirit.Size = new Size(1218, 599);
+            dgvSpirit.TabIndex = 0;
             // 
             // label1
             // 
@@ -319,24 +645,15 @@ namespace NewShopEditor
             // label6
             // 
             label6.AutoSize = true;
-            label6.Location = new Point(19, 61);
+            label6.Location = new Point(15, 61);
             label6.Name = "label6";
             label6.Size = new Size(71, 15);
             label6.TabIndex = 21;
             label6.Text = "Client Path :";
             // 
-            // btnNewMallItem
-            // 
-            btnNewMallItem.Location = new Point(349, 28);
-            btnNewMallItem.Name = "btnNewMallItem";
-            btnNewMallItem.Size = new Size(75, 23);
-            btnNewMallItem.TabIndex = 4;
-            btnNewMallItem.Text = "New Item";
-            btnNewMallItem.UseVisualStyleBackColor = true;
-            // 
             // ShopEditor
             // 
-            ClientSize = new Size(1363, 928);
+            ClientSize = new Size(1272, 813);
             Controls.Add(label6);
             Controls.Add(label5);
             Controls.Add(label4);
@@ -353,7 +670,11 @@ namespace NewShopEditor
             Controls.Add(btnFindPath);
             Controls.Add(btnSave);
             Controls.Add(tabControl);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
             Name = "ShopEditor";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "EO Shop/NewShop Editor";
             tabControl.ResumeLayout(false);
             tabShop.ResumeLayout(false);
@@ -361,6 +682,30 @@ namespace NewShopEditor
             ((System.ComponentModel.ISupportInitialize)dgvItems).EndInit();
             tabNewShopMx.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dgvNewShopMxItems).EndInit();
+            tabPage1.ResumeLayout(false);
+            tabWardrobe.ResumeLayout(false);
+            tabCasual.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvWBCasual).EndInit();
+            tabWeapon.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvWBWeapon).EndInit();
+            tabAvatar.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvWBAvatar).EndInit();
+            tabDecor.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvWBDecor).EndInit();
+            tabToy.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvWBToy).EndInit();
+            tabHair.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvWBHair).EndInit();
+            tabFollowPet.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvWBFPet).EndInit();
+            tabEudSkin.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvWBEudSkin).EndInit();
+            tabServant.ResumeLayout(false);
+            tabControl1.ResumeLayout(false);
+            tabGift.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvGift).EndInit();
+            tabSpirit.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvSpirit).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -376,5 +721,31 @@ namespace NewShopEditor
         private Button btnNewItem;
         private Button btnNewShop;
         private Button btnNewMallItem;
+        private Button btnUptName;
+        private TabPage tabPage1;
+        private TabControl tabWardrobe;
+        private TabPage tabCasual;
+        private TabPage tabWeapon;
+        private TabPage tabAvatar;
+        private TabPage tabDecor;
+        private TabPage tabToy;
+        private TabPage tabHair;
+        private DataGridView dgvWBWeapon;
+        private DataGridView dgvWBHair;
+        private DataGridView dgvWBCasual;
+        private DataGridView dgvWBAvatar;
+        private DataGridView dgvWBDecor;
+        private DataGridView dgvWBToy;
+        private TabPage tabFollowPet;
+        private DataGridView dgvWBFPet;
+        private TabPage tabEudSkin;
+        private DataGridView dgvWBEudSkin;
+        private TabPage tabServant;
+        private TabControl tabControl1;
+        private TabPage tabGift;
+        private DataGridView dgvGift;
+        private TabPage tabSpirit;
+        private DataGridView dgvSpirit;
+        private Button btnNewServerItem;
     }
 }
